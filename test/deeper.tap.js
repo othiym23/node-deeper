@@ -1,7 +1,8 @@
-var path = require('path')
-  , tap  = require('tap')
-  , test = tap.test
-  , d    = require(path.join(__dirname, '..', 'deeper'))
+var path         = require('path')
+  , EventEmitter = require('events').EventEmitter
+  , tap          = require('tap')
+  , test         = tap.test
+  , d            = require(path.join(__dirname, '..', 'deeper'))
   ;
 
 test("deeper handles all the edge cases", function (t) {
@@ -46,6 +47,11 @@ test("deeper handles all the edge cases", function (t) {
   t.ok(d(a, b), "identical simple object values check out");
 
   t.ok(d([0,1], [0,1]), "arrays check out");
+
+  function onerror(error) { console.err(error.stack); }
+  var eeA = new EventEmitter(); eeA.on('error', onerror);
+  var eeB = new EventEmitter(); eeB.on('error', onerror);
+  t.ok(d(eeA, eeB), "more complex objects check out");
 
   var cyclicA = {}; cyclicA.x = cyclicA;
   var cyclicB = {}; cyclicB.x = cyclicB;
@@ -136,6 +142,10 @@ test("deeper handles all the edge cases", function (t) {
 
   b = {b : 'b'};
   t.notOk(d(a, b), "different object values aren't the same");
+
+  function ondata(data) { console.log(data); }
+  eeB.on('data', ondata);
+  t.notOk(d(eeA, eeB), "changed objects don't match");
 
   awful.granular.stuff[2] = 3;
   t.notOk(d(heinous, awful), "small changes should be found");
