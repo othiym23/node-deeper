@@ -132,4 +132,18 @@ wrapper.patchAssert = function () {
   };
 };
 
+wrapper.patchChai = function () {
+  var chai = require('chai');
+  chai.Assertion.overwriteMethod('eql', function () {
+    return function eql(obj, msg) {
+      this.assert(deeper(this._obj, obj),
+                  "expected #{this} to deeply equal #{exp}",
+                  "expected #{this} to not deeply equal #{exp}",
+                  obj,
+                  this._obj,
+                  true);
+    };
+  });
+};
+
 module.exports = wrapper;

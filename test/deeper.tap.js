@@ -195,3 +195,26 @@ test("monkeypatching assert.deepEqual works", function (t) {
                  "shouldn't blow up with patched assert.deepEqual");
   t.end();
 });
+
+test("monkeypatching chai.eql works", function (t) {
+  var chai           = require('chai')
+    , expect         = chai.expect
+    , AssertionError = chai.AssertionError
+    ;
+
+  t.doesNotThrow(function () { expect([]).eql({}); },
+                 "chai.eql should be broken because it clones assert's bug");
+  t.doesNotThrow(function () { expect([]).deep.equal({}); },
+                 "chail.deep.equal should be broken because it clones assert's bug");
+
+  d.patchChai();
+
+  t.throws(function () { expect({}).eql([]); },
+           new AssertionError({message : "expected {} to deeply equal []"}),
+           "chai.eql should blow up now that bug is gone");
+  t.throws(function () { expect({}).deep.equal([]); },
+           new AssertionError({message : "expected {} to deeply equal []"}),
+           "chai.deep.equal should blow up now that bug is gone");
+
+  t.end();
+});
