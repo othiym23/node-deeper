@@ -1,3 +1,5 @@
+'use strict';
+
 var path         = require('path')
   , EventEmitter = require('events').EventEmitter
   , tap          = require('tap')

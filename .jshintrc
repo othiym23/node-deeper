@@ -7,6 +7,5 @@
   "latedef": true,
   "newcap": true,
   "nonew": true,
-  "node": true,
-  "strict": false
+  "node": true
 }
