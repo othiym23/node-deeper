@@ -193,3 +193,36 @@ test("monkeypatching chai.eql works", function (t) {
 
   t.end();
 });
+
+test("before monkeypatching tap itself", function (t) {
+  t.deepEqual({}, [], "using buggy version of deepEqual");
+  t.deepEquals({}, [], "using buggy version of deepEquals");
+  t.equivalent({}, [], "using buggy version of equivalent");
+  t.isEquivalent({}, [], "using buggy version of isEquivalent");
+  t.looseEqual({}, [], "using buggy version of looseEqual");
+  t.looseEquals({}, [], "using buggy version of looseEquals");
+  t.isDeeply({}, [], "using buggy version of isDeeply");
+  t.same({}, [], "using buggy version of same");
+
+  // trying to compare heinous and awful here will cause a RangeError
+
+  t.end();
+});
+
+d.patchTap();
+
+test("after monkeypatching tap", function (t) {
+  t.notDeepEqual({}, [], "using deeper (behind notDeepEqual)");
+  t.isNotDeepEqual({}, [], "using deeper (behind isNotDeepEqual)");
+  t.inequivalent({}, [], "using deeper (behind inequivalent)");
+  t.isInequivalent({}, [], "using deeper (behind isInequivalent)");
+  t.notEquivalent({}, [], "using deeper (behind notEquivalent)");
+  t.isNotEquivalent({}, [], "using deeper (behind isNotEquivalent)");
+  t.isNotDeeply({}, [], "using deeper (behind isNotDeeply)");
+  t.notDeeply({}, [], "using deeper (behind notDeeply)");
+  t.notSame({}, [], "using deeper (behind notSame)");
+
+  t.deepEqual(heinous, awful, "everything's awesome now");
+
+  t.end();
+});

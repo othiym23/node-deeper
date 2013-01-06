@@ -138,13 +138,157 @@ wrapper.patchChai = function () {
   var chai = require('chai');
   chai.Assertion.overwriteMethod('eql', function () {
     return function eql(obj, msg) {
-      this.assert(deeper(this._obj, obj),
+      this.assert(wrapper(this._obj, obj),
                   "expected #{this} to deeply equal #{exp}",
                   "expected #{this} to not deeply equal #{exp}",
                   obj,
                   this._obj,
                   true);
     };
+  });
+};
+
+/**
+ * Isaac and James, I thought you were my friends. :(
+ *
+ * This is some super-burly monkeypatching here, done more out of determination
+ * to figure out how to do it than good sense. Still, it works and is only as
+ * fragile as node-tap is mutable.
+ */
+wrapper.patchTap = function () {
+  var tap      = require('tap')
+    , inherits = require('inherits')
+    ;
+
+  // copied straight from tap-test.js
+  function assertParasite(fn) {
+    return function _deeperAssert() {
+      if (this._bailedOut) return;
+
+      var res = fn.apply(tap.assert, arguments);
+      this.result(res);
+      return res;
+    };
+  }
+
+  // methods and synonyms that will use deeper under the covers
+  var omg = [
+    "equivalent",
+    "isEquivalent",
+    "looseEqual",
+    "looseEquals",
+    "isDeeply",
+    "same",
+    "deepEqual",
+    "deepEquals",
+    "notEquivalent",
+    "notDeepEqual",
+    "notDeeply",
+    "notSame",
+    "isNotDeepEqual",
+    "isNotDeeply",
+    "isNotEquivalent",
+    "isInequivalent",
+    "inequivalent"
+  ];
+
+  var oldAssert = tap.assert;
+  // ditch assert's properties by hiding them behind a proxy
+  tap.assert = oldAssert.bind(null);
+  tap.assert.ok = tap.assert;
+  Object.getOwnPropertyNames(oldAssert).forEach(function (name) {
+    if (tap.assert.hasOwnProperty(name) || name === 'prototype') return;
+
+    if (omg.indexOf(name) >= 0) return;
+
+    var descriptor = Object.getOwnPropertyDescriptor(oldAssert, name);
+    Object.defineProperty(tap.assert, name, descriptor);
+  });
+
+  var newTestProto = {};
+  Object.getOwnPropertyNames(tap.Test.prototype).forEach(function (name) {
+    if (omg.indexOf(name) >= 0) return;
+
+    var descriptor = Object.getOwnPropertyDescriptor(tap.Test.prototype, name);
+    Object.defineProperty(newTestProto, name, descriptor);
+  });
+  tap.Test.prototype = newTestProto;
+  // have to reset the prototype after wantonly abusing it
+  inherits(tap.Test, tap.Test.super);
+
+  function equivalent(a, b, message, extra) {
+    if (extra && extra.skip) return tap.assert.skip(message, extra);
+
+    extra        = extra   || {};
+    message      = message || "should be equivalent";
+    extra.found  = a;
+    extra.wanted = b;
+
+    return tap.assert(wrapper(a, b), message, extra);
+  }
+  tap.assert.equivalent = equivalent;
+  tap.Test.prototype.equivalent = equivalent;
+
+  [
+    "isEquivalent",
+    "looseEqual",
+    "looseEquals",
+    "isDeeply",
+    "same",
+    "deepEqual",
+    "deepEquals"
+  ].forEach(function (alias) {
+    Object.defineProperty(tap.assert, alias, {
+      value      : equivalent,
+      enumerable : false
+    });
+
+    var descriptor = Object.getOwnPropertyDescriptor(tap.assert, alias)
+      , value = descriptor.value
+      ;
+
+    if (!value) return;
+
+    descriptor.value = assertParasite(value);
+    Object.defineProperty(tap.Test.prototype, alias, descriptor);
+  });
+
+  function inequivalent(a, b, message, extra) {
+    if (extra && extra.skip) return tap.assert.skip(message, extra);
+
+    extra           = extra   || {};
+    message         = message || "should not be equivalent";
+    extra.found     = a;
+    extra.doNotWant = b;
+
+    return tap.assert(!wrapper(a, b), message, extra);
+  }
+  tap.assert.inequivalent = inequivalent;
+  tap.Test.prototype.inequivalent = inequivalent;
+
+  [
+    "notEquivalent",
+    "notDeepEqual",
+    "notDeeply",
+    "notSame",
+    "isNotDeepEqual",
+    "isNotDeeply",
+    "isNotEquivalent",
+    "isInequivalent",
+  ].forEach(function (alias) {
+    Object.defineProperty(tap.assert, alias, {
+      value      : inequivalent,
+      enumerable : false
+    });
+
+    var descriptor = Object.getOwnPropertyDescriptor(tap.assert, alias)
+      , value      = descriptor.value
+      ;
+
+    if (!value) return;
+
+    descriptor.value = assertParasite(value);
+    Object.defineProperty(tap.Test.prototype, alias, descriptor);
   });
 };
 

@@ -25,7 +25,8 @@
   "license": "Apache License 2.0",
   "devDependencies": {
     "tap": "~0.3.3",
-    "chai": "~1.4.2"
+    "chai": "~1.4.2",
+    "inherits": "~1.0.0"
   },
   "optionalDependencies": {
     "buffertools": "~1.1.0"
