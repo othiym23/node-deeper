@@ -12,7 +12,7 @@ test("deeper handles all the edge cases", function (t) {
    *
    */
 
-  function functionA(a) { return a++; }
+  function functionA(a) { return a; }
   var functionB = functionA;
 
   // 1. === gets the job done
@@ -89,7 +89,7 @@ test("deeper handles all the edge cases", function (t) {
       stuff : [0, 1, 2]
     }
   };
-  awful.granular.self = heinous;
+  awful.granular.self = awful;
 
   t.ok(d(heinous, awful), "more complex objects also check out");
 
