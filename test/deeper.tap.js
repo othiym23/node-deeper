@@ -152,3 +152,46 @@ test("deeper handles all the edge cases", function (t) {
 
   t.end();
 });
+
+test("monkeypatching assert.deepEqual works", function (t) {
+  function functionA(a) { return a; }
+
+  var heinous = {
+    nothin   : null,
+    nope     : undefined,
+    number   : 0,
+    funky    : functionA,
+    stringer : "heya",
+    then     : new Date("1981-03-30"),
+    rexpy    : /^(pi|π)$/,
+    granular : {
+      stuff : [0, 1, 2]
+    }
+  };
+  heinous.granular.self = heinous;
+
+  var awful = {
+    nothin   : null,
+    nope     : undefined,
+    number   : 0,
+    funky    : functionA,
+    stringer : "heya",
+    then     : new Date("1981-03-30"),
+    rexpy    : /^(pi|π)$/,
+    granular : {
+      stuff : [0, 1, 2]
+    }
+  };
+  awful.granular.self = awful;
+
+  var assert = require('assert');
+  t.throws(function () { assert.deepEqual(heinous, awful); },
+           new RangeError("Maximum call stack size exceeded"),
+           "should blow up with stock assert.deepEqual");
+
+  d.patchAssert();
+
+  t.doesNotThrow(function () { assert.deepEqual(heinous, awful); },
+                 "shouldn't blow up with patched assert.deepEqual");
+  t.end();
+});

@@ -119,4 +119,17 @@ function deeper(a, b, ca, cb) {
   }
 }
 
-module.exports = function (a, b) { return deeper(a, b, [], []); };
+function wrapper(a, b) {
+  return deeper(a, b, [], []);
+}
+
+wrapper.patchAssert = function () {
+  var assert = require('assert');
+  assert.deepEqual = function deepEqual(actual, expected, message) {
+    if (!wrapper(actual, expected)) {
+      assert.fail(actual, expected, message, 'deepEqual', assert.deepEqual);
+    }
+  };
+};
+
+module.exports = wrapper;
