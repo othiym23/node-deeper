@@ -7,6 +7,35 @@ var path         = require('path')
   , d            = require(path.join(__dirname, '..', 'deeper'))
   ;
 
+function functionA(a) { return a; }
+var heinous = {
+  nothin   : null,
+  nope     : undefined,
+  number   : 0,
+  funky    : functionA,
+  stringer : "heya",
+  then     : new Date("1981-03-30"),
+  rexpy    : /^(pi|π)$/,
+  granular : {
+    stuff : [0, 1, 2]
+  }
+};
+heinous.granular.self = heinous;
+
+var awful = {
+  nothin   : null,
+  nope     : undefined,
+  number   : 0,
+  funky    : functionA,
+  stringer : "heya",
+  then     : new Date("1981-03-30"),
+  rexpy    : /^(pi|π)$/,
+  granular : {
+    stuff : [0, 1, 2]
+  }
+};
+awful.granular.self = awful;
+
 test("deeper handles all the edge cases", function (t) {
   /*
    *
@@ -14,7 +43,6 @@ test("deeper handles all the edge cases", function (t) {
    *
    */
 
-  function functionA(a) { return a; }
   var functionB = functionA;
 
   // 1. === gets the job done
@@ -64,34 +92,6 @@ test("deeper handles all the edge cases", function (t) {
   var z = {v:{v:{v:{v:{v:{v:{v:{v:{v:{v:{v:{v:{v:{v:{v:{}}}}}}}}}}}}}}}};
   z.v.v.v.v.v.v.v.v.v.v.v.v.v.v.v.v = z;
   t.ok(d(y, z), "deeply recursive data structures also work");
-
-  var heinous = {
-    nothin   : null,
-    nope     : undefined,
-    number   : 0,
-    funky    : functionA,
-    stringer : "heya",
-    then     : new Date("1981-03-30"),
-    rexpy    : /^(pi|π)$/,
-    granular : {
-      stuff : [0, 1, 2]
-    }
-  };
-  heinous.granular.self = heinous;
-
-  var awful = {
-    nothin   : null,
-    nope     : undefined,
-    number   : 0,
-    funky    : functionA,
-    stringer : "heya",
-    then     : new Date("1981-03-30"),
-    rexpy    : /^(pi|π)$/,
-    granular : {
-      stuff : [0, 1, 2]
-    }
-  };
-  awful.granular.self = awful;
 
   t.ok(d(heinous, awful), "more complex objects also check out");
 
@@ -152,40 +152,13 @@ test("deeper handles all the edge cases", function (t) {
   awful.granular.stuff[2] = 3;
   t.notOk(d(heinous, awful), "small changes should be found");
 
+  awful.granular.stuff[2] = 2;
+  t.ok(d(heinous, awful), "small changes should be fixable");
+
   t.end();
 });
 
 test("monkeypatching assert.deepEqual works", function (t) {
-  function functionA(a) { return a; }
-
-  var heinous = {
-    nothin   : null,
-    nope     : undefined,
-    number   : 0,
-    funky    : functionA,
-    stringer : "heya",
-    then     : new Date("1981-03-30"),
-    rexpy    : /^(pi|π)$/,
-    granular : {
-      stuff : [0, 1, 2]
-    }
-  };
-  heinous.granular.self = heinous;
-
-  var awful = {
-    nothin   : null,
-    nope     : undefined,
-    number   : 0,
-    funky    : functionA,
-    stringer : "heya",
-    then     : new Date("1981-03-30"),
-    rexpy    : /^(pi|π)$/,
-    granular : {
-      stuff : [0, 1, 2]
-    }
-  };
-  awful.granular.self = awful;
-
   var assert = require('assert');
   t.throws(function () { assert.deepEqual(heinous, awful); },
            new RangeError("Maximum call stack size exceeded"),
