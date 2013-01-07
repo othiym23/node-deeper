@@ -1,7 +1,7 @@
 `deeper` is a library for structurally comparing the equality of JavaScript
 values. It supports recursive / cyclical data structures, is written to avoid
 try / catch / throw (for speed), and uses
-[Ben Nordhuuis](http://github.com/bnoordhuis)'s
+[Ben Noordhuis](http://github.com/bnoordhuis)'s
 [buffertools](https://github.com/bnoordhuis/node-buffertools) when it can to
 speed up Buffer comparison.
 
