@@ -24,11 +24,11 @@
   "author": "Forrest L Norvell <ogd@aoaioxxysz.net> (https://github.com/othiym23)",
   "license": "Apache License 2.0",
   "devDependencies": {
-    "tap": "~0.3.3",
-    "chai": "~1.4.2",
-    "inherits": "~1.0.0"
+    "chai": "^2.3.0",
+    "inherits": "^1.0.0",
+    "tap": "^0.7.1"
   },
   "optionalDependencies": {
-    "buffertools": "~1.1.0"
+    "buffertools": "^2.1.2"
   }
 }
