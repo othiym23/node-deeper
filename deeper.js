@@ -1,16 +1,15 @@
-'use strict';
+'use strict'
 
-function isArguments(object) {
-  return Object.prototype.toString.call(object) === '[object Arguments]';
+function isArguments (object) {
+  return Object.prototype.toString.call(object) === '[object Arguments]'
 }
 
-var fastEqual;
+var fastEqual
 try {
-  require('buffertools');
-  fastEqual = Buffer.equals;
-}
-catch (e) {
-  // whoops, weren't able to install node-buffertools
+  require('buffertools')
+  fastEqual = Buffer.equals
+} catch (e) {
+  // whoops, nobody told buffertools it wasn't installed
 }
 
 /**
@@ -58,238 +57,62 @@ catch (e) {
  * o Users of this function are cool with mutually recursive data structures
  *   that are otherwise identical being treated as the same.
  */
-function deeper(a, b, ca, cb) {
+module.exports = function deeper (a, b) {
+  return deeper_(a, b, [], [])
+}
+
+function deeper_ (a, b, ca, cb) {
   if (a === b) {
-    return true;
-  }
-  else if (typeof a !== 'object' || typeof b !== 'object') {
-    return false;
-  }
-  else if (a === null || b === null) {
-    return false;
-  }
-  else if (Buffer.isBuffer(a) && Buffer.isBuffer(b)) {
+    return true
+  } else if (typeof a !== 'object' || typeof b !== 'object') {
+    return false
+  } else if (a === null || b === null) {
+    return false
+  } else if (Buffer.isBuffer(a) && Buffer.isBuffer(b)) {
     if (fastEqual) {
-      return fastEqual.call(a, b);
+      return fastEqual.call(a, b)
+    } else {
+      if (a.length !== b.length) return false
+
+      for (var i = 0; i < a.length; i++) if (a[i] !== b[i]) return false
+
+      return true
     }
-    else {
-      if (a.length !== b.length) return false;
+  } else if (a instanceof Date && b instanceof Date) {
+    return a.getTime() === b.getTime()
+  } else if (a instanceof RegExp && b instanceof RegExp) {
+    return a.source === b.source &&
+    a.global === b.global &&
+    a.multiline === b.multiline &&
+    a.lastIndex === b.lastIndex &&
+    a.ignoreCase === b.ignoreCase
+  } else if (isArguments(a) || isArguments(b)) {
+    if (!(isArguments(a) && isArguments(b))) return false
 
-      for (var i = 0; i < a.length; i++) if (a[i] !== b[i]) return false;
+    var slice = Array.prototype.slice
+    return deeper_(slice.call(a), slice.call(b), ca, cb)
+  } else {
+    if (a.constructor !== b.constructor) return false
 
-      return true;
-    }
-  }
-  else if (a instanceof Date && b instanceof Date) {
-    return a.getTime() === b.getTime();
-  }
-  else if (a instanceof RegExp && b instanceof RegExp) {
-    return a.source     === b.source &&
-           a.global     === b.global &&
-           a.multiline  === b.multiline &&
-           a.lastIndex  === b.lastIndex &&
-           a.ignoreCase === b.ignoreCase;
-  }
-  else if (isArguments(a) || isArguments(b)) {
-    if (!(isArguments(a) && isArguments(b))) return false;
+    var ka = Object.keys(a)
+    var kb = Object.keys(b)
+    if (ka.length !== kb.length) return false
 
-    var slice = Array.prototype.slice;
-    return deeper(slice.call(a), slice.call(b), ca, cb);
-  }
-  else {
-    if (a.constructor !== b.constructor) return false;
+    var cal = ca.length
+    while (cal--) if (ca[cal] === a) return cb[cal] === b
+    ca.push(a); cb.push(b)
 
-    var ka = Object.keys(a), kb = Object.keys(b);
-    if (ka.length !== kb.length) return false;
+    ka.sort(); kb.sort()
+    for (var j = ka.length - 1; j >= 0; j--) if (ka[j] !== kb[j]) return false
 
-    var cal = ca.length;
-    while (cal--) if (ca[cal] === a) return cb[cal] === b;
-    ca.push(a); cb.push(b);
-
-    ka.sort(); kb.sort();
-    for (var j = ka.length - 1; j >= 0; j--) if (ka[j] !== kb[j]) return false;
-
-    var key;
+    var key
     for (var k = ka.length - 1; k >= 0; k--) {
-      key = ka[k];
-      if (!deeper(a[key], b[key], ca, cb)) return false;
+      key = ka[k]
+      if (!deeper_(a[key], b[key], ca, cb)) return false
     }
 
-    ca.pop(); cb.pop();
+    ca.pop(); cb.pop()
 
-    return true;
+    return true
   }
 }
-
-function wrapper(a, b) {
-  return deeper(a, b, [], []);
-}
-
-wrapper.patchAssert = function () {
-  var assert = require('assert');
-  assert.deepEqual = function deepEqual(actual, expected, message) {
-    if (!wrapper(actual, expected)) {
-      assert.fail(actual, expected, message, 'deepEqual', assert.deepEqual);
-    }
-  };
-};
-
-wrapper.patchChai = function () {
-  var chai = require('chai');
-  chai.Assertion.overwriteMethod('eql', function () {
-    return function eql(obj, msg) {
-      this.assert(wrapper(this._obj, obj),
-                  "expected #{this} to deeply equal #{exp}",
-                  "expected #{this} to not deeply equal #{exp}",
-                  obj,
-                  this._obj,
-                  true);
-    };
-  });
-};
-
-/**
- * Isaac and James, I thought you were my friends. :(
- *
- * This is some super-burly monkeypatching here, done more out of determination
- * to figure out how to do it than good sense. Still, it works and is only as
- * fragile as node-tap is mutable.
- */
-wrapper.patchTap = function () {
-  var tap      = require('tap')
-    , inherits = require('inherits')
-    ;
-
-  // copied straight from tap-test.js
-  function assertParasite(fn) {
-    return function _deeperAssert() {
-      if (this._bailedOut) return;
-
-      var res = fn.apply(tap.assert, arguments);
-      this.result(res);
-      return res;
-    };
-  }
-
-  // methods and synonyms that will use deeper under the covers
-  var omg = [
-    "equivalent",
-    "isEquivalent",
-    "looseEqual",
-    "looseEquals",
-    "isDeeply",
-    "same",
-    "deepEqual",
-    "deepEquals",
-    "notEquivalent",
-    "notDeepEqual",
-    "notDeeply",
-    "notSame",
-    "isNotDeepEqual",
-    "isNotDeeply",
-    "isNotEquivalent",
-    "isInequivalent",
-    "inequivalent"
-  ];
-
-  var oldAssert = tap.assert;
-  // ditch assert's properties by hiding them behind a proxy
-  tap.assert = oldAssert.bind(null);
-  tap.assert.ok = tap.assert;
-  Object.getOwnPropertyNames(oldAssert).forEach(function (name) {
-    if (tap.assert.hasOwnProperty(name) || name === 'prototype') return;
-
-    if (omg.indexOf(name) >= 0) return;
-
-    var descriptor = Object.getOwnPropertyDescriptor(oldAssert, name);
-    Object.defineProperty(tap.assert, name, descriptor);
-  });
-
-  var newTestProto = {};
-  Object.getOwnPropertyNames(tap.Test.prototype).forEach(function (name) {
-    if (omg.indexOf(name) >= 0) return;
-
-    var descriptor = Object.getOwnPropertyDescriptor(tap.Test.prototype, name);
-    Object.defineProperty(newTestProto, name, descriptor);
-  });
-  tap.Test.prototype = newTestProto;
-  // have to reset the prototype after wantonly abusing it
-  inherits(tap.Test, tap.Test.super);
-
-  function equivalent(a, b, message, extra) {
-    if (extra && extra.skip) return tap.assert.skip(message, extra);
-
-    extra        = extra   || {};
-    message      = message || "should be equivalent";
-    extra.found  = a;
-    extra.wanted = b;
-
-    return tap.assert(wrapper(a, b), message, extra);
-  }
-  tap.assert.equivalent = equivalent;
-  tap.Test.prototype.equivalent = equivalent;
-
-  [
-    "isEquivalent",
-    "looseEqual",
-    "looseEquals",
-    "isDeeply",
-    "same",
-    "deepEqual",
-    "deepEquals"
-  ].forEach(function (alias) {
-    Object.defineProperty(tap.assert, alias, {
-      value      : equivalent,
-      enumerable : false
-    });
-
-    var descriptor = Object.getOwnPropertyDescriptor(tap.assert, alias)
-      , value = descriptor.value
-      ;
-
-    if (!value) return;
-
-    descriptor.value = assertParasite(value);
-    Object.defineProperty(tap.Test.prototype, alias, descriptor);
-  });
-
-  function inequivalent(a, b, message, extra) {
-    if (extra && extra.skip) return tap.assert.skip(message, extra);
-
-    extra           = extra   || {};
-    message         = message || "should not be equivalent";
-    extra.found     = a;
-    extra.doNotWant = b;
-
-    return tap.assert(!wrapper(a, b), message, extra);
-  }
-  tap.assert.inequivalent = inequivalent;
-  tap.Test.prototype.inequivalent = inequivalent;
-
-  [
-    "notEquivalent",
-    "notDeepEqual",
-    "notDeeply",
-    "notSame",
-    "isNotDeepEqual",
-    "isNotDeeply",
-    "isNotEquivalent",
-    "isInequivalent",
-  ].forEach(function (alias) {
-    Object.defineProperty(tap.assert, alias, {
-      value      : inequivalent,
-      enumerable : false
-    });
-
-    var descriptor = Object.getOwnPropertyDescriptor(tap.assert, alias)
-      , value      = descriptor.value
-      ;
-
-    if (!value) return;
-
-    descriptor.value = assertParasite(value);
-    Object.defineProperty(tap.Test.prototype, alias, descriptor);
-  });
-};
-
-module.exports = wrapper;
