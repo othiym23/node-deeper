@@ -27,8 +27,5 @@
     "chai": "^2.3.0",
     "inherits": "^1.0.0",
     "tap": "^0.7.1"
-  },
-  "optionalDependencies": {
-    "buffertools": "^2.1.2"
   }
 }
