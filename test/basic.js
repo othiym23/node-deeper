@@ -1,8 +1,7 @@
 'use strict'
 
 var EventEmitter = require('events').EventEmitter
-var tap = require('tap')
-var test = tap.test
+var test = require('tap').test
 var d = require('../')
 
 function functionA (a) { return a }
