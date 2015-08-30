@@ -1,6 +1,6 @@
 {
   "name": "deeper",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "JavaScript \"deep equality\" / structural equality tester with Node.js flavor.",
   "scripts": {
     "test": "standard && tap test/*.js --coverage"
