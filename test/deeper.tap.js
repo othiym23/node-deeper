@@ -1,10 +1,9 @@
 'use strict'
 
-var path = require('path')
 var EventEmitter = require('events').EventEmitter
 var tap = require('tap')
 var test = tap.test
-var d = require(path.join(__dirname, '..', 'deeper'))
+var d = require('../')
 
 function functionA (a) { return a }
 var heinous = {
@@ -69,10 +68,10 @@ test('deeper handles all the edge cases', function (t) {
 
   // 8. loads of tests for objects
   t.ok(d({}, {}), 'bare objects check out')
-  var a = {a: 'a'}
+  var a = { a: 'a' }
   var b = a
   t.ok(d(a, b), 'identical object references check out')
-  b = {a: 'a'}
+  b = { a: 'a' }
   t.ok(d(a, b), 'identical simple object values check out')
 
   t.ok(d([0, 1], [0, 1]), 'arrays check out')
@@ -139,14 +138,26 @@ test('deeper handles all the edge cases', function (t) {
   rexpB = /^(howdy|hello)$/
   t.notOk(d(rexpA, rexpB), 'different regexps are not the same')
 
+  // 7. arguments
+  var outer = arguments
+  ;(function inner (tt) {
+    var inner = arguments
+    t.ok(d(outer, outer))
+    t.ok(d(outer, inner))
+    t.notOk(d(outer, [t]))
+  }(t))
+
   // 8. objects present edge cases galore
   t.notOk(d([], {}), "different object types shouldn't match")
 
   var nullstructor = Object.create(null)
   t.notOk(d({}, nullstructor), 'Object.create(null).constructor === undefined')
 
-  b = {b: 'b'}
+  b = { b: 'b' }
   t.notOk(d(a, b), "different object values aren't the same")
+
+  var c = { b: 'b', c: undefined }
+  t.notOk(d(b, c), "different object values aren't the same")
 
   function ondata (data) { console.log(data) }
   eeB.on('data', ondata)
