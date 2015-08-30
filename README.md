@@ -1,5 +1,5 @@
 [![deeper on npm](https://img.shields.io/npm/v/deeper.svg?style=flat)](http://npm.im/deeper)
-[![Build Status](https://travis-ci.org/othiym23/node-deeper.svg?branch=v1.1.0)](https://travis-ci.org/othiym23/node-deeper)
+[![Build Status](https://travis-ci.org/othiym23/node-deeper.svg?branch=master)](https://travis-ci.org/othiym23/node-deeper)
 [![Coverage Status](https://coveralls.io/repos/othiym23/node-deeper/badge.svg?branch=master&service=github)](https://coveralls.io/github/othiym23/node-deeper?branch=master)
 [!["standard" style](https://img.shields.io/badge/code%20style-standard-brightgreen.svg?style=flat)](https://github.com/feross/standard)
 
