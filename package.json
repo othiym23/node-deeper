@@ -2,7 +2,6 @@
   "name": "deeper",
   "version": "2.0.0",
   "description": "JavaScript \"deep equality\" / structural equality tester with Node.js flavor.",
-  "main": "deeper.js",
   "scripts": {
     "test": "standard && tap test/*.js --coverage"
   },
@@ -11,12 +10,12 @@
     "url": "https://github.com/othiym23/node-deeper.git"
   },
   "keywords": [
-    "deep",
-    "equals",
+    "deepEqual",
     "structural",
     "equality",
     "assert",
-    "testing"
+    "testing",
+    "tap"
   ],
   "author": "Forrest L Norvell <ogd@aoaioxxysz.net> (https://github.com/othiym23)",
   "license": "BSD-2-Clause",
