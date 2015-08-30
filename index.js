@@ -17,7 +17,7 @@ try {
 }
 
 /**
- * This is a node-specific version of a structural equality test, modeled on
+ * This is a Node-specific version of a structural equality test, modeled on
  * bits and pieces of loads of other implementations of this algorithm, most
  * notably the one in the Node.js source and the Underscore library. It doesn't
  * throw and handles cycles.
@@ -26,39 +26,41 @@ try {
  * inline, which makes it incredibly hard to follow. Here's what this version
  * of the algorithm does, in order:
  *
- * 1. === only tests objects and and functions by reference. Null is an object.
+ * 1. `===` only tests objects and functions by reference. `null` is an object.
  *    Any pairs of identical entities failing this test are therefore objects
- *    (including null), which need to be recursed into and compared attribute by
+ *    (including `null`), which need to be recursed into and compared attribute by
  *    attribute.
- * 2. Since the only matching entities to get to this test must be objects, if
- *    a or b is not an object, they're clearly not the same. All unfiltered a
- *    and b getting are objects (including null).
- * 3. null is an object, but null === null. All unfiltered a and b are non-null
- *    objects.
+ * 2. Since the only entities to get to this test must be objects, if `a` or `b`
+ *    is not an object, they're clearly not the same. All unfiltered `a` and `b`
+ *    getting past this are objects (including `null`).
+ * 3. `null` is an object, but `null === null.` All unfiltered `a` and `b` are
+ *    non-null `Objects`.
  * 4. Buffers need to be special-cased because they live partially on the wrong
  *    side of the C++ / JavaScript barrier. Still, calling this on structures
  *    that can contain Buffers is a bad idea, because they can contain
  *    multiple megabytes of data and comparing them byte-by-byte is hella
  *    expensive.
- * 5. It's much faster to compare dates by numeric value than by lexical value.
- * 6. Same goes for Regexps.
- * 7. The parts of an arguments list most people care about are the arguments
- *    themselves, not the callee, which you shouldn't be looking at anyway.
+ * 5. It's much faster to compare dates by numeric value (`.getTime()`) than by
+ *    lexical value.
+ * 6. Compare `RegExps` by their components, not the objects themselves.
+ * 7. Treat argumens objects like arrays. The parts of an arguments list most
+ *    people care about are the arguments themselves, not `callee`, which you
+ *    shouldn't be looking at anyway.
  * 8. Objects are more complex:
- *    a. ensure that a and b are on the same constructor chain
- *    b. ensure that a and b have the same number of own properties (which is
- *       what Object.keys returns).
- *    c. ensure that cyclical references don't blow up the stack.
- *    d. ensure that all the key names match (faster)
- *    e. esnure that all of the associated values match, recursively (slower)
+ *     1. Ensure that `a` and `b` are on the same constructor chain.
+ *     2. Ensure that `a` and `b` have the same number of own properties (which is
+ *        what `Object.keys()` returns).
+ *     3. Ensure that cyclical references don't blow up the stack.
+ *     4. Ensure that all the key names match (faster).
+ *     5. Ensure that all of the associated values match, recursively (slower).
  *
- * (SOMEWHAT UNTESTED) ASSUMPTIONS:
+ * (somewhat untested) assumptions:
  *
- * o Functions are only considered identical if they unify to the same
+ * - Functions are only considered identical if they unify to the same
  *   reference. To anything else is to invite the wrath of the halting problem.
- * o V8 is smart enough to optimize treating an Array like any other kind of
+ * - V8 is smart enough to optimize treating an Array like any other kind of
  *   object.
- * o Users of this function are cool with mutually recursive data structures
+ * - Users of this function are cool with mutually recursive data structures
  *   that are otherwise identical being treated as the same.
  */
 function deeper_ (a, b, ca, cb) {
@@ -96,6 +98,8 @@ function deeper_ (a, b, ca, cb) {
 
     var ka = Object.keys(a)
     var kb = Object.keys(b)
+    // don't bother with stack acrobatics if there's nothing there
+    if (ka.length === 0 && kb.length === 0) return true
     if (ka.length !== kb.length) return false
 
     var cal = ca.length
