@@ -4,10 +4,14 @@ function isArguments (object) {
   return Object.prototype.toString.call(object) === '[object Arguments]'
 }
 
-var fastEqual
+function deeper (a, b) {
+  return deeper_(a, b, [], [])
+}
+
+module.exports = deeper
+
 try {
-  require('buffertools')
-  fastEqual = Buffer.equals
+  deeper.fastEqual = require('buffertools').equals
 } catch (e) {
   // whoops, nobody told buffertools it wasn't installed
 }
@@ -57,10 +61,6 @@ try {
  * o Users of this function are cool with mutually recursive data structures
  *   that are otherwise identical being treated as the same.
  */
-module.exports = function deeper (a, b) {
-  return deeper_(a, b, [], [])
-}
-
 function deeper_ (a, b, ca, cb) {
   if (a === b) {
     return true
@@ -69,8 +69,8 @@ function deeper_ (a, b, ca, cb) {
   } else if (a === null || b === null) {
     return false
   } else if (Buffer.isBuffer(a) && Buffer.isBuffer(b)) {
-    if (fastEqual) {
-      return fastEqual.call(a, b)
+    if (deeper.fastEqual) {
+      return deeper.fastEqual.call(a, b)
     } else {
       if (a.length !== b.length) return false
 
