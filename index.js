@@ -71,7 +71,9 @@ function deeper_ (a, b, ca, cb) {
   } else if (a === null || b === null) {
     return false
   } else if (Buffer.isBuffer(a) && Buffer.isBuffer(b)) {
-    if (deeper.fastEqual) {
+    if (a.equals) {
+      return a.equals(b)
+    } else if (deeper.fastEqual) {
       return deeper.fastEqual.call(a, b)
     } else {
       if (a.length !== b.length) return false

@@ -2,14 +2,12 @@ var tap = require('tap')
 var test = tap.test
 var same = require('../')
 
-// force it to use the pure JS version
-delete same.fastEqual
-
 test('should match empty Buffers', function (t) {
   t.ok(same(new Buffer([]), new Buffer([])))
   t.end()
 })
 
+// remove equals off the list if it's there
 test('should match similar Buffers', function (t) {
   var b1 = new Buffer([0])
   b1.equals = null

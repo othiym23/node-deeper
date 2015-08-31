@@ -10,7 +10,9 @@
 values. It supports recursive / cyclical data structures, is written to avoid
 try / catch / throw (for speed), and has no dependencies by default.
 
-If you install [Ben Noordhuis](http://github.com/bnoordhuis)'s
+If you're running Node 0.12+ or io.js, `deeper` will use the built-in
+`Buffer.equals()`.  If you're running an older version of Node and you install
+[Ben Noordhuis](http://github.com/bnoordhuis)'s
 [buffertools](https://github.com/bnoordhuis/node-buffertools) into a project
 using `deeper`, it will use that to speed up comparison of Buffers. This used
 to be installed as an optional dependency, but it gets in the way of
